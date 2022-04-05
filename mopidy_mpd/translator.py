@@ -65,6 +65,12 @@ def track_to_mpd_format(track, position=None, stream_title=None):
     if position is not None and tlid is not None:
         result.append(("Pos", position))
         result.append(("Id", tlid))
+
+    if hasattr(track,'artwork'):
+        result.append(('artwork',track.artwork))
+    if hasattr(track,'like'):
+        result.append(('like',track.like))
+
     if track.album is not None and track.album.musicbrainz_id is not None:
         result.append(("MUSICBRAINZ_ALBUMID", track.album.musicbrainz_id))
 

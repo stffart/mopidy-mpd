@@ -99,6 +99,8 @@ def listplaylists(context):
             continue
         name = context.lookup_playlist_name_from_uri(playlist_ref.uri)
         result.append(("playlist", name))
+        if hasattr(playlist_ref,'artwork'):
+          result.append(("artwork", playlist_ref.artwork))
         result.append(("Last-Modified", last_modified))
     return result
 
@@ -160,6 +162,7 @@ def playlistadd(context, name, track_uri):
 
         ``NAME.m3u`` will be created if it does not exist.
     """
+
     _check_playlist_name(name)
     old_playlist = _get_playlist(context, name, must_exist=False)
     if not old_playlist:
@@ -191,6 +194,28 @@ def _create_playlist(context, name, tracks):
     """
     Creates new playlist using backend appropriate for the given tracks
     """
+    if 'liked:' in name:
+      params = name.split(':')
+      liked = params[1]
+      track_id = params[4]
+      uri = f"yandexmusic:track:{track_id}"
+      tl_tracks = context.core.tracklist.filter({"uri": [uri]}).get()
+      position = context.core.tracklist.index(tl_tracks[0]).get()
+      logger.error(tl_tracks[0])
+      #replacing track in current playback with liked one
+      #mopidy has not method for this, so we need to delete old one, create new on the same position
+      if hasattr(tl_tracks[0].track,'switchLike'):
+        switched = tl_tracks[0].track.switchLike()
+        context.core.tracklist.remove({"tlid": [tl_tracks[0].tlid] })
+        context.core.tracklist.add(tracks=[switched],at_position=position)
+        tl_tracks = context.core.tracklist.filter({"uri": [uri]}).get()
+        #We need to call private method to set current track to replaced one
+        core._actor.playback._set_current_tl_track(tl_tracks[0])
+        #context.core.playback.set_current_tl_track(tl_tracks[0])
+        uri_schemes = {urllib.parse.urlparse(t.uri).scheme for t in tracks}
+        for scheme in uri_schemes:
+           context.core.playlists.create(name, scheme).get()
+        return
     uri_schemes = {urllib.parse.urlparse(t.uri).scheme for t in tracks}
     for scheme in uri_schemes:
         new_playlist = context.core.playlists.create(name, scheme).get()

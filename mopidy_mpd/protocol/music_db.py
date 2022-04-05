@@ -3,7 +3,7 @@ import itertools
 import os.path
 from urllib.request import Request, urlopen
 import urllib.error
-
+import re
 from mopidy.models import Track
 from mopidy_mpd import exceptions, protocol, translator
 
@@ -444,10 +444,20 @@ def lsinfo(context, uri=None):
     directories located at the root level, for both ``lsinfo``, ``lsinfo
     ""``, and ``lsinfo "/"``.
     """
+
+    path_parts = re.findall(r"[^/]+", uri or "")
+    path = "/".join([""] + path_parts)
+    ref_uri = context._uri_map.uri_from_name(path)
+    refs = context.core.library.browse(ref_uri).get()
     result = []
     for path, lookup_future in context.browse(uri, recursive=False):
         if not lookup_future:
             result.append(("directory", path.lstrip("/")))
+            path_uri =  context._uri_map.uri_from_name(path)
+            for ref in refs:
+              if ref.uri == path_uri:
+                if hasattr(ref,'artwork'):
+                   result.append(("artwork", ref.artwork))
         else:
             for tracks in lookup_future.get().values():
                 if tracks:
