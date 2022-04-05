@@ -201,7 +201,6 @@ def _create_playlist(context, name, tracks):
       uri = f"yandexmusic:track:{track_id}"
       tl_tracks = context.core.tracklist.filter({"uri": [uri]}).get()
       position = context.core.tracklist.index(tl_tracks[0]).get()
-      logger.error(tl_tracks[0])
       #replacing track in current playback with liked one
       #mopidy has not method for this, so we need to delete old one, create new on the same position
       if hasattr(tl_tracks[0].track,'switchLike'):
@@ -210,8 +209,7 @@ def _create_playlist(context, name, tracks):
         context.core.tracklist.add(tracks=[switched],at_position=position)
         tl_tracks = context.core.tracklist.filter({"uri": [uri]}).get()
         #We need to call private method to set current track to replaced one
-        core._actor.playback._set_current_tl_track(tl_tracks[0])
-        #context.core.playback.set_current_tl_track(tl_tracks[0])
+        context.core._actor.playback._set_current_tl_track(tl_tracks[0])
         uri_schemes = {urllib.parse.urlparse(t.uri).scheme for t in tracks}
         for scheme in uri_schemes:
            context.core.playlists.create(name, scheme).get()
