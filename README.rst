@@ -2,6 +2,12 @@
 Mopidy-MPD
 **********
 
+This is modified version with additional fields support for graphic clients:
+
+- artwork field on tracks, directories, albums, artists - http url to image
+- like field, show if track has like by user on backend music platform
+**********
+
 .. image:: https://img.shields.io/pypi/v/Mopidy-MPD
     :target: https://pypi.org/project/Mopidy-MPD/
     :alt: Latest PyPI version
