@@ -522,7 +522,6 @@ def search(context, *args):
     except ValueError:
         return
     results = context.core.library.search(query).get()
-    logger.error(results)
     artists = [_artist_as_track(a) for a in _get_artists(results)]
     albums = [_album_as_track(a) for a in _get_albums(results)]
     tracks = _get_tracks(results)
