@@ -7,6 +7,10 @@ import re
 from mopidy.models import Track
 from mopidy_mpd import exceptions, protocol, translator
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 _SEARCH_MAPPING = {
     "album": "album",
     "albumartist": "albumartist",
@@ -71,6 +75,11 @@ _get_artists = functools.partial(_get_field, "artists")
 _get_tracks = functools.partial(_get_field, "tracks")
 
 
+def _artwork_or_empty(track):
+  if hasattr(track,"artwork"):
+    return track.artwork
+  return ""
+
 def _album_as_track(album):
     return Track(
         uri=album.uri,
@@ -78,12 +87,13 @@ def _album_as_track(album):
         artists=album.artists,
         album=album,
         date=album.date,
+        artwork=_artwork_or_empty(album)
     )
 
 
 def _artist_as_track(artist):
     return Track(
-        uri=artist.uri, name="Artist: " + artist.name, artists=[artist]
+        uri=artist.uri, name="Artist: " + artist.name, artists=[artist], artwork=_artwork_or_empty(artist)
     )
 
 
@@ -512,6 +522,7 @@ def search(context, *args):
     except ValueError:
         return
     results = context.core.library.search(query).get()
+    logger.error(results)
     artists = [_artist_as_track(a) for a in _get_artists(results)]
     albums = [_album_as_track(a) for a in _get_albums(results)]
     tracks = _get_tracks(results)

@@ -101,6 +101,8 @@ def listplaylists(context):
         result.append(("playlist", name))
         if hasattr(playlist_ref,'artwork'):
           result.append(("artwork", playlist_ref.artwork))
+        if hasattr(playlist_ref,'generated'):
+          result.append(("generated", playlist_ref.generated))
         result.append(("Last-Modified", last_modified))
     return result
 
