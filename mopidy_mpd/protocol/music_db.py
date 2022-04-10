@@ -216,15 +216,18 @@ def find(context, *args):
     results = context.core.library.search(query=query, exact=True).get()
     result_tracks = []
     if (
-        "artist" not in query
-        and "albumartist" not in query
-        and "composer" not in query
-        and "performer" not in query
+        "artist" in query
+        or "albumartist" in query
+        or "composer" in query
+        or "performer" in query
     ):
         result_tracks += [_artist_as_track(a) for a in _get_artists(results)]
-    if "album" not in query:
+
+    if "album" in query:
         result_tracks += [_album_as_track(a) for a in _get_albums(results)]
+
     result_tracks += _get_tracks(results)
+
     return translator.tracks_to_mpd_format(result_tracks)
 
 
@@ -454,12 +457,23 @@ def lsinfo(context, uri=None):
     directories located at the root level, for both ``lsinfo``, ``lsinfo
     ""``, and ``lsinfo "/"``.
     """
+    result = []
+
+    uri_re = re.compile("[a-zA-Z0-9]+:(album|artist|track):[a-zA-Z0-9]+")
+    is_uri = uri_re.match(uri)
+    if is_uri:
+        refs = context.core.library.lookup(uris=[uri]).get().values()
+        for values in refs:
+          for ref in values:
+            if isinstance(ref,Track):
+              result.extend(translator.track_to_mpd_format(ref))
+
+        return result
 
     path_parts = re.findall(r"[^/]+", uri or "")
     path = "/".join([""] + path_parts)
     ref_uri = context._uri_map.uri_from_name(path)
     refs = context.core.library.browse(ref_uri).get()
-    result = []
     for path, lookup_future in context.browse(uri, recursive=False):
         if not lookup_future:
             result.append(("directory", path.lstrip("/")))

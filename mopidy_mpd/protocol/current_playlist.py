@@ -1,7 +1,9 @@
 import urllib
-
+import re
+from mopidy.models import Track
 from mopidy_mpd import exceptions, protocol, translator
-
+import logging
+logger = logging.getLogger(__name__)
 
 @protocol.commands.add("add")
 def add(context, uri):
@@ -183,6 +185,25 @@ def playlistfind(context, tag, needle):
 
         Finds songs in the current playlist with strict matching.
     """
+    if tag == "file":
+      uri_re = re.compile("[a-zA-Z0-9]+:(album|artist|track):[a-zA-Z0-9]+")
+      is_uri = uri_re.match(needle)
+      if is_uri:
+        result = []
+        tl_tracks = context.core.tracklist.filter({"uri": [needle]}).get()
+        if not tl_tracks:
+            return None
+        position = context.core.tracklist.index(tl_tracks[0]).get()
+        return translator.track_to_mpd_format(tl_tracks[0], position=position)
+
+        refs = context.core.library.lookup(uris=[needle]).get().values()
+        for values in refs:
+          for ref in values:
+            if isinstance(ref,Track):
+              result.extend(translator.track_to_mpd_format(ref))
+
+        return result
+
     if tag == "filename":
         tl_tracks = context.core.tracklist.filter({"uri": [needle]}).get()
         if not tl_tracks:
