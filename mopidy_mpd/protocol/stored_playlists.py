@@ -99,6 +99,7 @@ def listplaylists(context):
             continue
         name = context.lookup_playlist_name_from_uri(playlist_ref.uri)
         result.append(("playlist", name))
+        result.append(("Id", playlist_ref.uri))
         if hasattr(playlist_ref,'artwork'):
           result.append(("artwork", playlist_ref.artwork))
         if hasattr(playlist_ref,'generated'):
@@ -378,7 +379,7 @@ def rm(context, name):
     _check_playlist_name(name)
     uri = context.lookup_playlist_uri_from_name(name)
     if not uri:
-        raise exceptions.MpdNoExistError("No such playlist")
+          raise exceptions.MpdNoExistError("No such playlist")
     context.core.playlists.delete(uri).get()
 
 

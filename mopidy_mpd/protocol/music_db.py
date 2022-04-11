@@ -482,6 +482,7 @@ def lsinfo(context, uri=None):
               if ref.uri == path_uri:
                 if hasattr(ref,'artwork'):
                    result.append(("artwork", ref.artwork))
+                   result.append(("Id", ref.uri))
         else:
             for tracks in lookup_future.get().values():
                 if tracks:
